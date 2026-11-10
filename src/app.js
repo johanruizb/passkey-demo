@@ -13,6 +13,8 @@ import {
   startRegistration,
 } from '@simplewebauthn/browser';
 import { crearAlmacen, normalizarNombre } from './almacen.js';
+import { CLAVE_IDIOMA, resolverIdioma } from './idioma.js';
+import { TEXTOS } from './textos.js';
 
 const CLAVE_SESION = 'passkey-demo:sesion';
 const NOMBRE_RP = 'Passkey Demo';
@@ -44,6 +46,20 @@ try {
   sesionId = null;
 }
 
+function idiomaInicial() {
+  let guardado = null;
+  try {
+    guardado = localStorage.getItem(CLAVE_IDIOMA);
+  } catch {
+    // Sin localStorage se usa el idioma del navegador.
+  }
+  return resolverIdioma(guardado, navigator.language);
+}
+
+let idioma = idiomaInicial();
+let mensajeActual = null;
+let avisoActual = null;
+
 let ocupado = false;
 let ceremoniaRegistro = null;
 let ceremoniaAcceso = null;
@@ -66,6 +82,7 @@ const mensaje = $('#mensaje');
 const datosJson = $('#datos-json');
 const btnBorrar = $('#btn-borrar');
 const aviso = $('#aviso-navegador');
+const grupoIdioma = $('.idioma');
 
 function aBase64url(bytes) {
   let binario = '';
@@ -109,9 +126,58 @@ function usuarioSesion() {
   return usuario;
 }
 
-function mostrarMensaje(texto, esError = false) {
-  mensaje.textContent = texto;
-  mensaje.dataset.error = String(esError);
+function t(clave, ...args) {
+  const entrada = TEXTOS[idioma]?.[clave] ?? TEXTOS.es[clave] ?? clave;
+  return typeof entrada === 'function' ? entrada(...args) : entrada;
+}
+
+function pintarMensaje() {
+  if (!mensajeActual) return;
+  mensaje.textContent = t(mensajeActual.clave, ...mensajeActual.args);
+  mensaje.dataset.error = String(mensajeActual.error);
+}
+
+function mostrarMensaje(clave, { args = [], error = false } = {}) {
+  mensajeActual = { clave, args, error };
+  pintarMensaje();
+}
+
+function pintarAviso() {
+  if (!avisoActual) return;
+  aviso.textContent = t(avisoActual);
+}
+
+function aplicarIdioma(nuevo, persistir = false) {
+  idioma = nuevo === 'en' ? 'en' : 'es';
+  if (persistir) {
+    try {
+      localStorage.setItem(CLAVE_IDIOMA, idioma);
+    } catch {
+      // La preferencia vive en memoria aunque localStorage esté bloqueado.
+    }
+  }
+
+  document.documentElement.lang = idioma;
+
+  for (const elemento of document.querySelectorAll('[data-i18n]')) {
+    elemento.textContent = t(elemento.dataset.i18n);
+  }
+  for (const elemento of document.querySelectorAll('[data-i18n-placeholder]')) {
+    elemento.placeholder = t(elemento.dataset.i18nPlaceholder);
+  }
+  for (const elemento of document.querySelectorAll('[data-i18n-aria-label]')) {
+    elemento.setAttribute('aria-label', t(elemento.dataset.i18nAriaLabel));
+  }
+  for (const elemento of document.querySelectorAll('[data-i18n-content]')) {
+    elemento.setAttribute('content', t(elemento.dataset.i18nContent));
+  }
+  for (const boton of document.querySelectorAll('[data-idioma]')) {
+    boton.setAttribute('aria-pressed', String(boton.dataset.idioma === idioma));
+  }
+
+  render();
+  pintarMensaje();
+  pintarAviso();
 }
 
 function ocupar(valor) {
@@ -137,7 +203,7 @@ function nombreDeCredenciales(datos) {
 
 function render() {
   if (!almacen) {
-    estadoEl.textContent = 'No disponible';
+    estadoEl.textContent = t('estadoNoDisponible');
     formulario.hidden = true;
     btnEntrar.disabled = true;
     return;
@@ -148,7 +214,9 @@ function render() {
   const totalCredenciales = datos.credenciales.length;
   const activo = Boolean(usuario);
 
-  estadoEl.textContent = activo ? 'Sesión abierta' : 'Sin sesión';
+  estadoEl.textContent = activo
+    ? t('estadoSesionAbierta')
+    : t('estadoSinSesion');
   estadoEl.dataset.activa = String(activo);
 
   pasoCrear.dataset.estado = activo || totalCredenciales > 0 ? 'hecho' : 'activo';
@@ -161,10 +229,10 @@ function render() {
   if (!formularioVisible) {
     const nombre = nombreDeCredenciales(datos);
     hecho.textContent = activo
-      ? `Sesión abierta como ${usuario.nombre}.`
+      ? t('sesionAbiertaComo', usuario.nombre)
       : nombre
-        ? `Passkey creada para ${nombre}.`
-        : 'Passkey creada en este navegador.';
+        ? t('passkeyCreadaPara', nombre)
+        : t('passkeyCreadaEnNavegador');
   }
 
   nombreInput.disabled = ocupado || !soportado;
@@ -178,21 +246,25 @@ function render() {
   btnBorrar.hidden = !activo;
   btnBorrar.disabled = ocupado;
 
-  btnRegistrar.textContent = ocupado ? 'Esperando…' : 'Crear passkey';
-  btnSalir.textContent = ocupado ? 'Esperando…' : 'Cerrar sesión';
-  btnEntrar.textContent = ocupado ? 'Esperando…' : 'Entrar con passkey';
+  btnRegistrar.textContent = ocupado
+    ? t('esperando')
+    : t('crearPasskey');
+  btnSalir.textContent = ocupado ? t('esperando') : t('cerrarSesion');
+  btnEntrar.textContent = ocupado
+    ? t('esperando')
+    : t('entrarConPasskey');
 
-  pendienteSalir.textContent = 'Disponible cuando haya una sesión.';
-  pendienteEntrar.textContent = 'Ya estás dentro.';
+  pendienteSalir.textContent = t('pendienteSalir');
+  pendienteEntrar.textContent = t('pendienteEntrar');
 
   const salida = {
-    modo: 'servidor simulado',
-    origen: location.origin,
+    mode: t('servidorModo'),
+    origin: location.origin,
     rpID: RP_ID,
-    usuarios: datos.usuarios.length,
-    sesionesActivas: activo ? 1 : 0,
-    credencialesEnServidor: totalCredenciales,
-    credenciales: datos.credenciales.map((credencial) => {
+    users: datos.usuarios.length,
+    activeSessions: activo ? 1 : 0,
+    serverCredentials: totalCredenciales,
+    credentials: datos.credenciales.map((credencial) => {
       const dueno = datos.usuarios.find(
         (u) => u.id === credencial.usuarioId,
       );
@@ -204,12 +276,12 @@ function render() {
       }
       return {
         id: `${String(credencial.id).slice(0, 16)}…`,
-        usuario: dueno?.nombre ?? '—',
-        clavePublicaBytes: bytesClave,
-        contador: credencial.counter,
-        dispositivo: credencial.deviceType,
-        respaldo: credencial.backedUp,
-        transportes: credencial.transports ?? [],
+        user: dueno?.nombre ?? '—',
+        publicKeyBytes: bytesClave,
+        counter: credencial.counter,
+        device: credencial.deviceType,
+        backedUp: credencial.backedUp,
+        transports: credencial.transports ?? [],
       };
     }),
   };
@@ -217,35 +289,33 @@ function render() {
   datosJson.textContent = JSON.stringify(salida, null, 2);
 }
 
-function mensajeDeError(error, fase) {
+function claveDeError(error, fase) {
   if (
     error?.name === 'NotAllowedError' ||
     error?.name === 'AbortError'
   ) {
-    return fase === 'crear'
-      ? 'No se creó la passkey. Puedes intentarlo otra vez.'
-      : 'No se completó el acceso. Puedes intentarlo otra vez.';
+    return fase === 'crear' ? 'errorCanceladoCrear' : 'errorCanceladoEntrar';
   }
   if (error?.name === 'InvalidStateError') {
-    return 'Ya hay una passkey para este sitio en este dispositivo. Prueba a entrar con ella.';
+    return 'errorYaExiste';
   }
   if (error?.name === 'SecurityError') {
-    return 'El navegador bloqueó la operación. Comprueba que la página está en HTTPS o en localhost.';
+    return 'errorSeguridad';
   }
   if (
     error?.name === 'NotSupportedError' ||
     error?.name === 'ConstraintError'
   ) {
-    return 'Este autenticador no admite passkeys. Prueba con Face ID, Touch ID, Windows Hello o una llave de seguridad.';
+    return 'errorNoSoportado';
   }
   console.error(error);
-  return 'No se pudo completar la operación. Inténtalo de nuevo.';
+  return 'errorGenerico';
 }
 
 async function registrar(nombre) {
   if (!soportado || ocupado) return;
   ocupar(true);
-  mostrarMensaje('El navegador está esperando tu Face ID, huella o PIN.');
+  mostrarMensaje('esperandoAutenticador');
   try {
     const existente = almacen.usuarioPorNombre(nombre);
     const usuarioId = existente?.id ?? idNuevo();
@@ -286,7 +356,7 @@ async function registrar(nombre) {
     });
 
     if (!verificacion.verified || !verificacion.registrationInfo) {
-      mostrarMensaje('El navegador no pudo verificar la passkey.', true);
+      mostrarMensaje('errorVerificacion', { error: true });
       return;
     }
 
@@ -309,11 +379,11 @@ async function registrar(nombre) {
     });
 
     guardarSesion(ceremoniaRegistro.usuarioId);
-    mostrarMensaje(
-      `Passkey creada. Sesión abierta como ${ceremoniaRegistro.nombre}.`,
-    );
+    mostrarMensaje('passkeyCreadaSesion', {
+      args: [ceremoniaRegistro.nombre],
+    });
   } catch (error) {
-    mostrarMensaje(mensajeDeError(error, 'crear'), true);
+    mostrarMensaje(claveDeError(error, 'crear'), { error: true });
   } finally {
     ceremoniaRegistro = null;
     ocupar(false);
@@ -323,7 +393,7 @@ async function registrar(nombre) {
 async function entrar() {
   if (!soportado || ocupado) return;
   ocupar(true);
-  mostrarMensaje('El navegador está esperando tu Face ID, huella o PIN.');
+  mostrarMensaje('esperandoAutenticador');
   try {
     const opciones = await generateAuthenticationOptions({
       rpID: RP_ID,
@@ -335,19 +405,13 @@ async function entrar() {
     const respuesta = await startAuthentication({ optionsJSON: opciones });
     const guardada = almacen.credencial(respuesta.id);
     if (!guardada) {
-      mostrarMensaje(
-        'Esta passkey no está registrada en este navegador. Crea una nueva en la demo.',
-        true,
-      );
+      mostrarMensaje('passkeyNoRegistrada', { error: true });
       return;
     }
 
     const usuario = almacen.usuario(guardada.usuarioId);
     if (!usuario) {
-      mostrarMensaje(
-        'La cuenta de esta passkey ya no existe en esta demo. Crea una nueva.',
-        true,
-      );
+      mostrarMensaje('cuentaNoExiste', { error: true });
       return;
     }
 
@@ -355,10 +419,7 @@ async function entrar() {
       respuesta.response.userHandle &&
       respuesta.response.userHandle !== usuario.id
     ) {
-      mostrarMensaje(
-        'La passkey no corresponde a la cuenta guardada. Crea una nueva en la demo.',
-        true,
-      );
+      mostrarMensaje('passkeyNoCoincide', { error: true });
       return;
     }
 
@@ -377,7 +438,7 @@ async function entrar() {
     });
 
     if (!verificacion.verified) {
-      mostrarMensaje('La firma no coincide. Inténtalo de nuevo.', true);
+      mostrarMensaje('firmaNoCoincide', { error: true });
       return;
     }
 
@@ -386,9 +447,9 @@ async function entrar() {
       ultimoUso: new Date().toISOString(),
     });
     guardarSesion(usuario.id);
-    mostrarMensaje(`Entraste con la passkey de ${usuario.nombre}.`);
+    mostrarMensaje('entrasteComo', { args: [usuario.nombre] });
   } catch (error) {
-    mostrarMensaje(mensajeDeError(error, 'entrar'), true);
+    mostrarMensaje(claveDeError(error, 'entrar'), { error: true });
   } finally {
     ceremoniaAcceso = null;
     ocupar(false);
@@ -397,7 +458,7 @@ async function entrar() {
 
 function salir() {
   guardarSesion(null);
-  mostrarMensaje('Sesión cerrada. La passkey sigue en este dispositivo.');
+  mostrarMensaje('sesionCerrada');
   render();
 }
 
@@ -405,47 +466,43 @@ function borrar() {
   if (!almacen) return;
   const usuario = usuarioSesion();
   if (!usuario) return;
-  const seguro = window.confirm(
-    'Se borrarán los datos de esta demo en este navegador. La passkey seguirá en tu dispositivo. ¿Continuar?',
-  );
+  const seguro = window.confirm(t('confirmarBorrado'));
   if (!seguro) return;
   almacen.limpiar();
   guardarSesion(null);
-  mostrarMensaje(
-    'Datos de la demo borrados. La passkey sigue en tu dispositivo; bórrala desde la configuración de passkeys del sistema si quieres eliminarla.',
-  );
+  mostrarMensaje('datosBorrados');
   render();
 }
 
-function avisoDeEntorno() {
+function claveAviso() {
   if (!almacen) {
-    return 'Este navegador bloquea el almacenamiento local. La demo necesita guardar la credencial para poder verificarla.';
+    return 'avisoAlmacenamiento';
   }
   if (esIP) {
-    return 'Abre la demo en http://localhost:20396. WebAuthn no acepta direcciones IP.';
+    return 'avisoIP';
   }
   if (!window.isSecureContext) {
-    return 'Abre la demo en HTTPS o en localhost. WebAuthn no funciona en conexiones no seguras.';
+    return 'avisoContexto';
   }
-  return 'Este navegador no ofrece WebAuthn. Prueba con Chrome, Edge, Safari o Firefox actualizado.';
+  return 'avisoSinWebauthn';
 }
 
 function iniciar() {
+  aplicarIdioma(idioma);
+  grupoIdioma.hidden = false;
+
   if (!soportado) {
+    avisoActual = claveAviso();
     aviso.hidden = false;
-    aviso.textContent = avisoDeEntorno();
-    mostrarMensaje(
-      'Esta demo necesita WebAuthn y un contexto seguro. Abre la página en HTTPS o en localhost con un navegador actual.',
-      true,
-    );
+    pintarAviso();
+    mostrarMensaje('necesitaWebauthn', { error: true });
   }
-  render();
 
   formulario.addEventListener('submit', (event) => {
     event.preventDefault();
     const nombre = normalizarNombre(nombreInput.value);
     if (nombre.length < 2) {
-      mostrarMensaje('Escribe un nombre de al menos 2 letras.', true);
+      mostrarMensaje('nombreCorto', { error: true });
       nombreInput.focus();
       return;
     }
@@ -455,20 +512,20 @@ function iniciar() {
   btnEntrar.addEventListener('click', entrar);
   btnBorrar.addEventListener('click', borrar);
 
+  for (const boton of document.querySelectorAll('[data-idioma]')) {
+    boton.addEventListener('click', () =>
+      aplicarIdioma(boton.dataset.idioma, true),
+    );
+  }
+
   const usuario = usuarioSesion();
   if (soportado) {
     if (usuario) {
-      mostrarMensaje(
-        `Sesión abierta como ${usuario.nombre}. Cierra sesión para probar el acceso con la passkey.`,
-      );
+      mostrarMensaje('sesionAbiertaCierra', { args: [usuario.nombre] });
     } else if (almacen.estado().credenciales > 0) {
-      mostrarMensaje(
-        'La passkey sigue en este dispositivo. Entra con ella cuando quieras.',
-      );
+      mostrarMensaje('passkeySigueAqui');
     } else {
-      mostrarMensaje(
-        'Crea una passkey para empezar. Si ya tienes una en este navegador, prueba a entrar.',
-      );
+      mostrarMensaje('crearParaEmpezar');
     }
   }
 }

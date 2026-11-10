@@ -7,41 +7,77 @@
     <meta name="theme-color" content="#f1efe6" />
     <meta
       name="description"
+      data-i18n-content="descripcion"
       content="Un banco de pruebas público para passkeys. Crea una, cierra sesión y vuelve a entrar sin contraseña. WebAuthn real, verificado en tu navegador."
     />
     <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'"
     />
-    <title>Passkey Demo · Prueba una passkey en tu navegador</title>
+    <title data-i18n="titulo">Passkey Demo · Prueba una passkey en tu navegador</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="./estilos.css" />
   </head>
   <body>
-    <a class="salto" href="#principal">Saltar al contenido</a>
+    <a class="salto" href="#principal" data-i18n="saltarContenido"
+      >Saltar al contenido</a
+    >
 
     <header class="cabecera">
       <div class="cabecera__identidad">
         <a class="marca" href="./">Passkey Demo</a>
-        <p class="cabecera__nota">Un banco de pruebas público</p>
+        <p class="cabecera__nota" data-i18n="cabeceraNota">
+          Un banco de pruebas público
+        </p>
       </div>
-      <a
-        class="cabecera__enlace"
-        href="https://github.com/johanruizb/passkey-demo"
-        rel="noreferrer"
-        >Código en GitHub</a
-      >
+      <div class="cabecera__acciones">
+        <div
+          class="idioma"
+          role="group"
+          aria-label="Idioma"
+          data-i18n-aria-label="idiomaEtiqueta"
+          hidden
+        >
+          <button
+            class="idioma__boton"
+            type="button"
+            data-idioma="es"
+            lang="es"
+            aria-pressed="true"
+          >
+            ES
+          </button>
+          <button
+            class="idioma__boton"
+            type="button"
+            data-idioma="en"
+            lang="en"
+            aria-pressed="false"
+          >
+            EN
+          </button>
+        </div>
+        <a
+          class="cabecera__enlace"
+          href="https://github.com/johanruizb/passkey-demo"
+          rel="noreferrer"
+          data-i18n="codigoGithub"
+          >Código en GitHub</a
+        >
+      </div>
     </header>
 
     <main id="principal">
       <section class="entrada" aria-labelledby="titulo">
-        <h1 id="titulo">Prueba una passkey en este navegador.</h1>
-        <p class="entrada__texto">
+        <h1 id="titulo" data-i18n="tituloPrincipal">
+          Prueba una passkey en este navegador.
+        </h1>
+        <p class="entrada__texto" data-i18n="entradaTexto">
           Crea una, cierra la sesión y vuelve a entrar sin correo ni
           contraseña. La clave privada se queda en tu dispositivo; aquí solo
           se guarda la pública.
         </p>
-        <p class="entrada__aviso">
+        <p class="entrada__aviso" data-i18n="entradaAviso">
           El servidor de esta demo está simulado en tu navegador. No se envía
           nada a ninguna parte.
         </p>
@@ -55,7 +91,9 @@
           aria-busy="false"
         >
           <div class="panel__cabecera">
-            <p class="panel__etiqueta">Tu dispositivo</p>
+            <p class="panel__etiqueta" data-i18n="dispositivoEtiqueta">
+              Tu dispositivo
+            </p>
             <p
               class="panel__estado"
               id="estado"
@@ -67,10 +105,14 @@
             </p>
           </div>
 
-          <h2 class="panel__titulo" id="dispositivo-titulo">
+          <h2
+            class="panel__titulo"
+            id="dispositivo-titulo"
+            data-i18n="dispositivoTitulo"
+          >
             La llave que no se copia
           </h2>
-          <p class="panel__intro">
+          <p class="panel__intro" data-i18n="dispositivoIntro">
             El autenticador guarda la clave privada. El servidor solo recibe la
             pública y una firma.
           </p>
@@ -81,15 +123,19 @@
             <li class="paso" id="paso-crear" data-estado="activo">
               <div class="paso__cabecera">
                 <span class="paso__numero" aria-hidden="true">1</span>
-                <h3 class="paso__titulo">Crea tu passkey</h3>
+                <h3 class="paso__titulo" data-i18n="pasoCrearTitulo">
+                  Crea tu passkey
+                </h3>
               </div>
-              <p class="paso__texto">
+              <p class="paso__texto" data-i18n="pasoCrearTexto">
                 Elige un nombre. El navegador pedirá Face ID, huella o el PIN
                 del equipo.
               </p>
               <form class="formulario" id="form-registro" novalidate>
                 <label class="campo">
-                  <span class="campo__etiqueta">Tu nombre</span>
+                  <span class="campo__etiqueta" data-i18n="nombreEtiqueta"
+                    >Tu nombre</span
+                  >
                   <input
                     class="campo__control"
                     id="nombre"
@@ -97,6 +143,7 @@
                     type="text"
                     autocomplete="name"
                     placeholder="Tu nombre"
+                    data-i18n-placeholder="nombrePlaceholder"
                     maxlength="60"
                     required
                   />
@@ -105,6 +152,7 @@
                   class="boton boton--principal"
                   id="btn-registrar"
                   type="submit"
+                  data-i18n="crearPasskey"
                 >
                   Crear passkey
                 </button>
@@ -115,9 +163,11 @@
             <li class="paso" id="paso-salir" data-estado="pendiente">
               <div class="paso__cabecera">
                 <span class="paso__numero" aria-hidden="true">2</span>
-                <h3 class="paso__titulo">Cierra la sesión</h3>
+                <h3 class="paso__titulo" data-i18n="pasoSalirTitulo">
+                  Cierra la sesión
+                </h3>
               </div>
-              <p class="paso__texto">
+              <p class="paso__texto" data-i18n="pasoSalirTexto">
                 La passkey sigue en tu dispositivo. La sesión es solo un estado
                 de esta pestaña.
               </p>
@@ -126,10 +176,15 @@
                 id="btn-salir"
                 type="button"
                 hidden
+                data-i18n="cerrarSesion"
               >
                 Cerrar sesión
               </button>
-              <p class="paso__pendiente" id="pendiente-salir">
+              <p
+                class="paso__pendiente"
+                id="pendiente-salir"
+                data-i18n="pendienteSalir"
+              >
                 Disponible cuando haya una sesión.
               </p>
             </li>
@@ -137,19 +192,27 @@
             <li class="paso" id="paso-entrar" data-estado="activo">
               <div class="paso__cabecera">
                 <span class="paso__numero" aria-hidden="true">3</span>
-                <h3 class="paso__titulo">Vuelve a entrar</h3>
+                <h3 class="paso__titulo" data-i18n="pasoEntrarTitulo">
+                  Vuelve a entrar
+                </h3>
               </div>
-              <p class="paso__texto">
+              <p class="paso__texto" data-i18n="pasoEntrarTexto">
                 Un toque y Face ID. Sin escribir tu correo ni una contraseña.
               </p>
               <button
                 class="boton boton--principal"
                 id="btn-entrar"
                 type="button"
+                data-i18n="entrarConPasskey"
               >
                 Entrar con passkey
               </button>
-              <p class="paso__pendiente" id="pendiente-entrar" hidden>
+              <p
+                class="paso__pendiente"
+                id="pendiente-entrar"
+                hidden
+                data-i18n="pendienteEntrar"
+              >
                 Ya estás dentro.
               </p>
             </li>
@@ -160,14 +223,20 @@
 
         <aside class="servidor" aria-labelledby="servidor-titulo">
           <div class="panel__cabecera">
-            <p class="panel__etiqueta">El servidor</p>
-            <p class="panel__modo">simulado</p>
+            <p class="panel__etiqueta" data-i18n="servidorEtiqueta">
+              El servidor
+            </p>
+            <p class="panel__modo" data-i18n="servidorModoSimulado">simulado</p>
           </div>
 
-          <h2 class="panel__titulo" id="servidor-titulo">
+          <h2
+            class="panel__titulo"
+            id="servidor-titulo"
+            data-i18n="servidorTitulo"
+          >
             Lo que guarda el servidor
           </h2>
-          <p class="panel__intro">
+          <p class="panel__intro" data-i18n="servidorIntro">
             Ni contraseñas ni clave privada. Solo la clave pública, el
             identificador y el contador.
           </p>
@@ -176,41 +245,57 @@
             class="datos"
             role="group"
             aria-label="Datos del servidor simulado"
+            data-i18n-aria-label="datosAriaLabel"
             tabindex="0"
-          ><code id="datos-json">Cargando…</code></pre>
+          ><code id="datos-json" data-i18n="cargando">Cargando…</code></pre>
 
-          <p class="panel__nota">
+          <p class="panel__nota" data-i18n="servidorNota">
             En producción, esta información vive en un servidor real y la
             verificación de la firma ocurre allí. Aquí se hace en tu navegador
             para que la demo funcione sin backend.
           </p>
 
           <button class="boton boton--texto" id="btn-borrar" type="button" hidden>
-            Borrar los datos de esta demo
+            <span data-i18n="borrarDatos">Borrar los datos de esta demo</span>
           </button>
         </aside>
       </div>
 
       <section class="explicacion" aria-labelledby="explicacion-titulo">
-        <h2 id="explicacion-titulo">Qué acabas de ver</h2>
+        <h2 id="explicacion-titulo" data-i18n="explicacionTitulo">
+          Qué acabas de ver
+        </h2>
         <div class="explicacion__texto">
           <p>
-            <strong>La privada no viaja.</strong> Se queda en el autenticador
-            del sistema, protegida por Face ID, la huella o el PIN. Ni esta
-            página ni ningún servidor la reciben.
+            <strong data-i18n="explicacionPrivadaTitulo"
+              >La privada no viaja.</strong
+            >
+            <span data-i18n="explicacionPrivadaTexto"
+              >Se queda en el autenticador del sistema, protegida por Face ID, la
+              huella o el PIN. Ni esta página ni ningún servidor la reciben.</span
+            >
           </p>
           <p>
-            <strong>La pública sí se puede guardar.</strong> No sirve para
-            suplantar a nadie. El servidor la usa para comprobar que la firma
-            del desafío salió de tu llave privada.
+            <strong data-i18n="explicacionPublicaTitulo"
+              >La pública sí se puede guardar.</strong
+            >
+            <span data-i18n="explicacionPublicaTexto"
+              >No sirve para suplantar a nadie. El servidor la usa para comprobar
+              que la firma del desafío salió de tu llave privada.</span
+            >
           </p>
           <p>
-            <strong>El desafío es único.</strong> Cada intento usa un valor
-            nuevo. Una firma capturada no se puede reutilizar en otro acceso.
-            Si pierdes el dispositivo, necesitas un método de recuperación.
+            <strong data-i18n="explicacionDesafioTitulo"
+              >El desafío es único.</strong
+            >
+            <span data-i18n="explicacionDesafioTexto"
+              >Cada intento usa un valor nuevo. Una firma capturada no se puede
+              reutilizar en otro acceso. Si pierdes el dispositivo, necesitas un
+              método de recuperación.</span
+            >
           </p>
         </div>
-        <p class="explicacion__nota">
+        <p class="explicacion__nota" data-i18n="explicacionNota">
           En iPhone, la passkey puede vivir en iCloud Keychain y usarse en
           Safari o en la app instalada. Este laboratorio guarda el registro en
           este navegador: para probar otro dispositivo, crea una passkey allí.
@@ -220,12 +305,18 @@
 
     <footer class="pie">
       <p>
-        Hecho con
+        <span data-i18n="pieHechoCon">Hecho con</span>
         <a href="https://simplewebauthn.dev/" rel="noreferrer">SimpleWebAuthn</a
-        >. Sin cuentas, sin anuncios, sin datos que salgan de tu navegador.
+        >.
+        <span data-i18n="pieSinCuentas"
+          >Sin cuentas, sin anuncios, sin datos que salgan de tu navegador.</span
+        >
       </p>
       <p>
-        <a href="https://github.com/johanruizb/passkey-demo" rel="noreferrer"
+        <a
+          href="https://github.com/johanruizb/passkey-demo"
+          rel="noreferrer"
+          data-i18n="pieLicencia"
           >Código y licencia MIT</a
         >
       </p>

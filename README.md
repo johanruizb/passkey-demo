@@ -5,6 +5,9 @@ cuentas, sin contraseñas, sin backend y sin enviar datos a ningún sitio.
 
 **Demo:** <https://johanruizb.github.io/passkey-demo/>
 
+La interfaz está en español y en inglés. En la primera visita se usa el idioma
+del navegador y puedes cambiarlo desde la cabecera; la elección se recuerda.
+
 La página crea una passkey de verdad, cierra la sesión y vuelve a entrar con
 Face ID, huella, Windows Hello o una llave física. El panel oscuro enseña lo
 que un servidor guardaría: la clave pública, el identificador de la credencial
@@ -88,6 +91,7 @@ incluye un autenticador virtual en CI.
 ```text
 public/            HTML, CSS, fuentes, favicon y el bundle generado
 src/almacen.js     servidor simulado sobre localStorage
+src/textos.js      textos de la interfaz en español e inglés
 src/app.js         WebAuthn, sesión y UI
 scripts/build.mjs  bundle con esbuild
 scripts/servir.mjs preview estático local
