@@ -1,0 +1,36 @@
+{
+  "name": "passkey-demo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Un banco de pruebas público para passkeys. WebAuthn real, servidor simulado en el navegador.",
+  "homepage": "https://johanruizb.github.io/passkey-demo/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johanruizb/passkey-demo.git"
+  },
+  "license": "MIT",
+  "author": "johanruizb",
+  "keywords": [
+    "passkey",
+    "webauthn",
+    "demo",
+    "seguridad"
+  ],
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "start": "node scripts/build.mjs && node scripts/servir.mjs",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "@simplewebauthn/browser": "13.3.0",
+    "@simplewebauthn/server": "13.3.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  }
+}

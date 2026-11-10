@@ -1,0 +1,242 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <meta name="theme-color" content="#f1efe6" />
+    <meta
+      name="description"
+      content="Un banco de pruebas público para passkeys. Crea una, cierra sesión y vuelve a entrar sin contraseña. WebAuthn real, verificado en tu navegador."
+    />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self'; font-src 'self'; img-src 'self' data:; connect-src 'none'; base-uri 'none'; form-action 'none'; object-src 'none'"
+    />
+    <title>Passkey Demo · Prueba una passkey en tu navegador</title>
+    <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./estilos.css" />
+  </head>
+  <body>
+    <a class="salto" href="#principal">Saltar al contenido</a>
+
+    <header class="cabecera">
+      <div class="cabecera__identidad">
+        <a class="marca" href="./">Passkey Demo</a>
+        <p class="cabecera__nota">Un banco de pruebas público</p>
+      </div>
+      <a
+        class="cabecera__enlace"
+        href="https://github.com/johanruizb/passkey-demo"
+        rel="noreferrer"
+        >Código en GitHub</a
+      >
+    </header>
+
+    <main id="principal">
+      <section class="entrada" aria-labelledby="titulo">
+        <h1 id="titulo">Prueba una passkey en este navegador.</h1>
+        <p class="entrada__texto">
+          Crea una, cierra la sesión y vuelve a entrar sin correo ni
+          contraseña. La clave privada se queda en tu dispositivo; aquí solo
+          se guarda la pública.
+        </p>
+        <p class="entrada__aviso">
+          El servidor de esta demo está simulado en tu navegador. No se envía
+          nada a ninguna parte.
+        </p>
+      </section>
+
+      <div class="banco">
+        <section
+          class="dispositivo"
+          id="dispositivo"
+          aria-labelledby="dispositivo-titulo"
+          aria-busy="false"
+        >
+          <div class="panel__cabecera">
+            <p class="panel__etiqueta">Tu dispositivo</p>
+            <p
+              class="panel__estado"
+              id="estado"
+              data-activa="false"
+              role="status"
+              aria-live="polite"
+            >
+              Sin sesión
+            </p>
+          </div>
+
+          <h2 class="panel__titulo" id="dispositivo-titulo">
+            La llave que no se copia
+          </h2>
+          <p class="panel__intro">
+            El autenticador guarda la clave privada. El servidor solo recibe la
+            pública y una firma.
+          </p>
+
+          <p class="aviso-navegador" id="aviso-navegador" hidden></p>
+
+          <ol class="pasos">
+            <li class="paso" id="paso-crear" data-estado="activo">
+              <div class="paso__cabecera">
+                <span class="paso__numero" aria-hidden="true">1</span>
+                <h3 class="paso__titulo">Crea tu passkey</h3>
+              </div>
+              <p class="paso__texto">
+                Elige un nombre. El navegador pedirá Face ID, huella o el PIN
+                del equipo.
+              </p>
+              <form class="formulario" id="form-registro" novalidate>
+                <label class="campo">
+                  <span class="campo__etiqueta">Tu nombre</span>
+                  <input
+                    class="campo__control"
+                    id="nombre"
+                    name="nombre"
+                    type="text"
+                    autocomplete="name"
+                    placeholder="Tu nombre"
+                    maxlength="60"
+                    required
+                  />
+                </label>
+                <button
+                  class="boton boton--principal"
+                  id="btn-registrar"
+                  type="submit"
+                >
+                  Crear passkey
+                </button>
+              </form>
+              <p class="paso__hecho" id="hecho-registro" hidden></p>
+            </li>
+
+            <li class="paso" id="paso-salir" data-estado="pendiente">
+              <div class="paso__cabecera">
+                <span class="paso__numero" aria-hidden="true">2</span>
+                <h3 class="paso__titulo">Cierra la sesión</h3>
+              </div>
+              <p class="paso__texto">
+                La passkey sigue en tu dispositivo. La sesión es solo un estado
+                de esta pestaña.
+              </p>
+              <button
+                class="boton boton--fantasma"
+                id="btn-salir"
+                type="button"
+                hidden
+              >
+                Cerrar sesión
+              </button>
+              <p class="paso__pendiente" id="pendiente-salir">
+                Disponible cuando haya una sesión.
+              </p>
+            </li>
+
+            <li class="paso" id="paso-entrar" data-estado="activo">
+              <div class="paso__cabecera">
+                <span class="paso__numero" aria-hidden="true">3</span>
+                <h3 class="paso__titulo">Vuelve a entrar</h3>
+              </div>
+              <p class="paso__texto">
+                Un toque y Face ID. Sin escribir tu correo ni una contraseña.
+              </p>
+              <button
+                class="boton boton--principal"
+                id="btn-entrar"
+                type="button"
+              >
+                Entrar con passkey
+              </button>
+              <p class="paso__pendiente" id="pendiente-entrar" hidden>
+                Ya estás dentro.
+              </p>
+            </li>
+          </ol>
+
+          <p class="panel__pie" id="mensaje" role="status" aria-live="polite"></p>
+        </section>
+
+        <aside class="servidor" aria-labelledby="servidor-titulo">
+          <div class="panel__cabecera">
+            <p class="panel__etiqueta">El servidor</p>
+            <p class="panel__modo">simulado</p>
+          </div>
+
+          <h2 class="panel__titulo" id="servidor-titulo">
+            Lo que guarda el servidor
+          </h2>
+          <p class="panel__intro">
+            Ni contraseñas ni clave privada. Solo la clave pública, el
+            identificador y el contador.
+          </p>
+
+          <pre
+            class="datos"
+            role="group"
+            aria-label="Datos del servidor simulado"
+            tabindex="0"
+          ><code id="datos-json">Cargando…</code></pre>
+
+          <p class="panel__nota">
+            En producción, esta información vive en un servidor real y la
+            verificación de la firma ocurre allí. Aquí se hace en tu navegador
+            para que la demo funcione sin backend.
+          </p>
+
+          <button class="boton boton--texto" id="btn-borrar" type="button" hidden>
+            Borrar los datos de esta demo
+          </button>
+        </aside>
+      </div>
+
+      <section class="explicacion" aria-labelledby="explicacion-titulo">
+        <h2 id="explicacion-titulo">Qué acabas de ver</h2>
+        <div class="explicacion__texto">
+          <p>
+            <strong>La privada no viaja.</strong> Se queda en el autenticador
+            del sistema, protegida por Face ID, la huella o el PIN. Ni esta
+            página ni ningún servidor la reciben.
+          </p>
+          <p>
+            <strong>La pública sí se puede guardar.</strong> No sirve para
+            suplantar a nadie. El servidor la usa para comprobar que la firma
+            del desafío salió de tu llave privada.
+          </p>
+          <p>
+            <strong>El desafío es único.</strong> Cada intento usa un valor
+            nuevo. Una firma capturada no se puede reutilizar en otro acceso.
+            Si pierdes el dispositivo, necesitas un método de recuperación.
+          </p>
+        </div>
+        <p class="explicacion__nota">
+          En iPhone, la passkey puede vivir en iCloud Keychain y usarse en
+          Safari o en la app instalada. Este laboratorio guarda el registro en
+          este navegador: para probar otro dispositivo, crea una passkey allí.
+        </p>
+      </section>
+    </main>
+
+    <footer class="pie">
+      <p>
+        Hecho con
+        <a href="https://simplewebauthn.dev/" rel="noreferrer">SimpleWebAuthn</a
+        >. Sin cuentas, sin anuncios, sin datos que salgan de tu navegador.
+      </p>
+      <p>
+        <a href="https://github.com/johanruizb/passkey-demo" rel="noreferrer"
+          >Código y licencia MIT</a
+        >
+      </p>
+    </footer>
+
+    <noscript>
+      <p class="sin-js">
+        Esta demo necesita JavaScript y un navegador con WebAuthn.
+      </p>
+    </noscript>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
